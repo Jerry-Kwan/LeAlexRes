@@ -1,4 +1,8 @@
 misc/
 paper/
 .DS_Store
-
+Report*
+~$*
+tmp*
+__pycache__/
+tiny_imagenet_200/
