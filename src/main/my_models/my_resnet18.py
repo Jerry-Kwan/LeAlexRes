@@ -13,11 +13,12 @@ class BasicBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(out_channels)
 
     def forward(self, x):
-        output = self.conv1(x)
-        output = F.relu(self.bn1(output))
-        output = self.conv2(output)
-        output = self.bn2(output)
-        return F.relu(x + output)
+        out = self.conv1(x)
+        out = F.relu(self.bn1(out))
+        out = self.conv2(out)
+        out = self.bn2(out)
+
+        return F.relu(x + out)
 
 
 class DownBlock(nn.Module):
@@ -35,17 +36,21 @@ class DownBlock(nn.Module):
 
     def forward(self, x):
         extra_x = self.extra(x)
-        output = self.conv1(x)
-        out = F.relu(self.bn1(output))
+
+        out = self.conv1(x)
+        out = F.relu(self.bn1(out))
         out = self.conv2(out)
         out = self.bn2(out)
+
         return F.relu(extra_x + out)
 
 
 class MyResNet18(nn.Module):
+    """My Original ResNet18."""
     def __init__(self, num_classes) -> None:
         super(MyResNet18, self).__init__()  # call nn.Module's init
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3)
+        self.bn1 = nn.BatchNorm2d(64)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         self.layer1 = nn.Sequential(BasicBlock(64, 64, 1), BasicBlock(64, 64, 1))
@@ -60,6 +65,7 @@ class MyResNet18(nn.Module):
 
     def forward(self, x):
         x = self.conv1(x)
+        x = F.relu(self.bn1(x))
         x = self.maxpool(x)
 
         x = self.layer1(x)

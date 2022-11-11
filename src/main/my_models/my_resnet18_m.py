@@ -46,6 +46,7 @@ class MyResNet18M(nn.Module):
     def __init__(self, num_classes, size, alpha, beta, k) -> None:
         super(MyResNet18M, self).__init__()  # call nn.Module's init
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3)
+        self.lrn1 = nn.LocalResponseNorm(size=size, alpha=alpha, beta=beta, k=k)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         self.layer1 = nn.Sequential(BasicBlock(64, 64, 1, size, alpha, beta, k),
@@ -64,6 +65,7 @@ class MyResNet18M(nn.Module):
 
     def forward(self, x):
         x = self.conv1(x)
+        x = self.lrn1(F.relu(x))
         x = self.maxpool(x)
 
         x = self.layer1(x)

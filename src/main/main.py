@@ -17,15 +17,15 @@ import my_models as mm
 writer = None
 best_acc1 = 0
 
-parser = argparse.ArgumentParser(description='MyResNet18 Training and Testing')
+parser = argparse.ArgumentParser(description='MyResNet18 (Ori) Training and Testing')
 parser.add_argument('data',
                     metavar='DIR',
                     nargs='?',
                     default='tiny_imagenet_200',
                     help='path to dataset (default: tiny_imagenet_200)')
 parser.add_argument('--writer',
-                    default='tiny_imagenet_200',
-                    help='filefolder name of tensorboard (default: tiny_imagenet_200)')
+                    default='tiny_imagenet_200_ori',
+                    help='filefolder name of tensorboard (default: tiny_imagenet_200_ori)')
 parser.add_argument('-j',
                     '--workers',
                     default=4,
@@ -38,14 +38,15 @@ parser.add_argument('-nc', '--num-classes', type=int, default=200, help='class n
 parser.add_argument('--gamma', type=float, default=0.1, help='StepLR gamma')
 parser.add_argument('--step-size', type=int, default=30, help='StepLR step-size')
 parser.add_argument('-lr', '--learning-rate', type=float, default=0.001, help='initial learning rate')
-parser.add_argument('-b', '--batch-size', type=int, default=128, help='mini-batch size (default 256)')
+parser.add_argument('-b', '--batch-size', type=int, default=128, help='mini-batch size (default 128)')
 parser.add_argument('-e', '--evaluate', action='store_true', help='evaluate model on validation set')
-parser.add_argument('-p', '--print-freq', default=80, type=int, metavar='N', help='print frequency (default: 80)')
+parser.add_argument('-p', '--print-freq', default=70, type=int, metavar='N', help='print frequency (default: 70)')
 parser.add_argument('--write-graph', action='store_true', help='write graph of structure on tensorboard')
 parser.add_argument('--dummy', action='store_true', help="use fake data to benchmark")
 
 
 def main():
+    print('Original ResNet18')
     args = parser.parse_args()
     global writer
     global best_acc1
@@ -100,7 +101,7 @@ def main():
                                              pin_memory=True)
 
     if args.evaluate:
-        validate(val_loader, model, criterion, args, -1)
+        validate(val_loader, model, criterion, args, -1, device)
         return
 
     if args.write_graph:
@@ -186,9 +187,9 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args):
             progress.display(i + 1)
 
         if i % args.print_freq == args.print_freq - 1:
-            writer.add_scalar('training loss', running_loss / args.print_freq, epoch * len(train_loader) + i + 1)
-            writer.add_scalar('training acc1', top1.avg, epoch * len(train_loader) + i + 1)
-            writer.add_scalar('training acc5', top5.avg, epoch * len(train_loader) + i + 1)
+            writer.add_scalar('training loss (Ori)', running_loss / args.print_freq, epoch * len(train_loader) + i + 1)
+            writer.add_scalar('training acc1 (Ori)', top1.avg, epoch * len(train_loader) + i + 1)
+            writer.add_scalar('training acc5 (Ori)', top5.avg, epoch * len(train_loader) + i + 1)
             running_loss = 0
 
 
@@ -223,7 +224,7 @@ def validate(val_loader, model, criterion, args, epoch, device):
                     progress.display(i + 1)
 
             if epoch != -1:
-                writer.add_scalar('validate loss', validate_loss / len(loader), epoch)
+                writer.add_scalar('validate loss (Ori)', validate_loss / len(loader), epoch)
 
     global writer
     batch_time = AverageMeter('Time', ':6.3f', Summary.NONE)
@@ -237,15 +238,15 @@ def validate(val_loader, model, criterion, args, epoch, device):
 
     run_validate(val_loader)
     progress.display_summary()
-    writer.add_scalar('validate acc1', top1.avg, epoch)
-    writer.add_scalar('validate acc5', top5.avg, epoch)
+    writer.add_scalar('validate acc1 (Ori)', top1.avg, epoch)
+    writer.add_scalar('validate acc5 (Ori)', top5.avg, epoch)
     return top1.avg
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+def save_checkpoint(state, is_best, filename='checkpoint_ori.pth.tar'):
     torch.save(state, filename)
     if is_best:
-        shutil.copyfile(filename, 'model_best.pth.tar')
+        shutil.copyfile(filename, 'model_best_ori.pth.tar')
 
 
 class Summary(Enum):
