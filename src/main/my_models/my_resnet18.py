@@ -59,13 +59,17 @@ class MyResNet18(nn.Module):
         self.fc = nn.Linear(512, num_classes)  # in_features, out_features
 
     def forward(self, x):
-        out = self.conv1(x)
-        out = self.maxpool(out)
-        out = self.layer1(out)
-        out = self.layer2(out)
-        out = self.layer3(out)
-        out = self.layer4(out)
-        out = self.avgpool(out)
-        out = out.reshape(x.shape[0], -1)  # [0] is batch_size
-        out = self.fc(out)
-        return out
+        x = self.conv1(x)
+        x = self.maxpool(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        # x = x.reshape(x.shape[0], -1)  # [0] is batch_size
+        x = self.fc(x)
+
+        return x
