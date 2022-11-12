@@ -29,7 +29,6 @@ class DownBlock(nn.Module):
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=stride[1], padding=1)
         self.lrn2 = nn.LocalResponseNorm(size=size, alpha=alpha, beta=beta, k=k)
 
-        # refer to pytorch resnet implementation
         self.extra = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride[0], padding=0)
 
     def forward(self, x):
