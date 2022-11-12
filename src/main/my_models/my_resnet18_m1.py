@@ -13,11 +13,11 @@ class BasicBlock(nn.Module):
         self.lrn2 = nn.LocalResponseNorm(size=size, alpha=alpha, beta=beta, k=k)
 
     def forward(self, x):
-        output = self.conv1(x)
-        output = F.relu(output)
-        output = self.lrn1(output)
-        output = self.conv2(output)
-        return self.lrn2(F.relu(x + output))
+        out = self.conv1(x)
+        out = F.relu(out)
+        out = self.lrn1(out)
+        out = self.conv2(out)
+        return self.lrn2(F.relu(x + out))
 
 
 class DownBlock(nn.Module):
@@ -34,17 +34,17 @@ class DownBlock(nn.Module):
 
     def forward(self, x):
         extra_x = self.extra(x)
-        output = self.conv1(x)
-        output = F.relu(output)
-        output = self.lrn1(output)
-        output = self.conv2(output)
-        return self.lrn2(F.relu(extra_x + output))
+        out = self.conv1(x)
+        out = F.relu(out)
+        out = self.lrn1(out)
+        out = self.conv2(out)
+        return self.lrn2(F.relu(extra_x + out))
 
 
-class MyResNet18M(nn.Module):
-    """My modified ResNet18."""
+class MyResNet18M1(nn.Module):
+    """My modified ResNet18 (version 1, replace BN with LRN)."""
     def __init__(self, num_classes, size, alpha, beta, k) -> None:
-        super(MyResNet18M, self).__init__()  # call nn.Module's init
+        super(MyResNet18M1, self).__init__()  # call nn.Module's init
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3)
         self.lrn1 = nn.LocalResponseNorm(size=size, alpha=alpha, beta=beta, k=k)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)

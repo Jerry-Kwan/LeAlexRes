@@ -17,15 +17,15 @@ import my_models as mm
 writer = None
 best_acc1 = 0
 
-parser = argparse.ArgumentParser(description='MyResNet18 Training and Testing')
+parser = argparse.ArgumentParser(description='MyResNet18 (M1) Training and Testing')
 parser.add_argument('data',
                     metavar='DIR',
                     nargs='?',
                     default='tiny_imagenet_200',
                     help='path to dataset (default: tiny_imagenet_200)')
 parser.add_argument('--writer',
-                    default='tiny_imagenet_200',
-                    help='filefolder name of tensorboard (default: tiny_imagenet_200)')
+                    default='tiny_imagenet_200_m1',
+                    help='filefolder name of tensorboard (default: tiny_imagenet_200_m1)')
 parser.add_argument('-j',
                     '--workers',
                     default=4,
@@ -50,13 +50,14 @@ parser.add_argument('--k', type=int, default=2, help='LRN k')
 
 
 def main():
+    print('ResNet18 M1, replacing BN with LRN')
     args = parser.parse_args()
     global writer
     global best_acc1
     writer = SummaryWriter('runs/' + args.writer)
 
     # create model
-    model = mm.MyResNet18M(num_classes=args.num_classes, size=args.size, alpha=args.alpha, beta=args.beta, k=args.k)
+    model = mm.MyResNet18M1(num_classes=args.num_classes, size=args.size, alpha=args.alpha, beta=args.beta, k=args.k)
 
     if not torch.cuda.is_available():
         device = torch.device('cpu')
@@ -104,7 +105,7 @@ def main():
                                              pin_memory=True)
 
     if args.evaluate:
-        validate(val_loader, model, criterion, args, -1)
+        validate(val_loader, model, criterion, args, -1, device)
         return
 
     if args.write_graph:
@@ -190,9 +191,9 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args):
             progress.display(i + 1)
 
         if i % args.print_freq == args.print_freq - 1:
-            writer.add_scalar('training loss', running_loss / args.print_freq, epoch * len(train_loader) + i + 1)
-            writer.add_scalar('training acc1', top1.avg, epoch * len(train_loader) + i + 1)
-            writer.add_scalar('training acc5', top5.avg, epoch * len(train_loader) + i + 1)
+            writer.add_scalar('training loss (M1)', running_loss / args.print_freq, epoch * len(train_loader) + i + 1)
+            writer.add_scalar('training acc1 (M1)', top1.avg, epoch * len(train_loader) + i + 1)
+            writer.add_scalar('training acc5 (M1)', top5.avg, epoch * len(train_loader) + i + 1)
             running_loss = 0
 
 
@@ -227,7 +228,7 @@ def validate(val_loader, model, criterion, args, epoch, device):
                     progress.display(i + 1)
 
             if epoch != -1:
-                writer.add_scalar('validate loss', validate_loss / len(loader), epoch)
+                writer.add_scalar('validate loss (M1)', validate_loss / len(loader), epoch)
 
     global writer
     batch_time = AverageMeter('Time', ':6.3f', Summary.NONE)
@@ -241,15 +242,15 @@ def validate(val_loader, model, criterion, args, epoch, device):
 
     run_validate(val_loader)
     progress.display_summary()
-    writer.add_scalar('validate acc1', top1.avg, epoch)
-    writer.add_scalar('validate acc5', top5.avg, epoch)
+    writer.add_scalar('validate acc1 (M1)', top1.avg, epoch)
+    writer.add_scalar('validate acc5 (M1)', top5.avg, epoch)
     return top1.avg
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+def save_checkpoint(state, is_best, filename='checkpoint_m1.pth.tar'):
     torch.save(state, filename)
     if is_best:
-        shutil.copyfile(filename, 'model_best.pth.tar')
+        shutil.copyfile(filename, 'model_best_m1.pth.tar')
 
 
 class Summary(Enum):

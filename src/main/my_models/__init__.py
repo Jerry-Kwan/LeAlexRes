@@ -1,2 +1,2 @@
 from .my_resnet18 import MyResNet18
-from .my_resnet18_m import MyResNet18M
+from .my_resnet18_m1 import MyResNet18M1
