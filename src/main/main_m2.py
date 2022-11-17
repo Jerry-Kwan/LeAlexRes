@@ -18,11 +18,17 @@ writer = None
 best_acc1 = 0
 
 parser = argparse.ArgumentParser(description='MyResNet18 (M2) Training and Testing')
-parser.add_argument('data',
+parser.add_argument('--data',
                     metavar='DIR',
                     nargs='?',
                     default='tiny_imagenet_200',
                     help='path to dataset (default: tiny_imagenet_200)')
+parser.add_argument('--writer-home',
+                    default='runs/',
+                    help='tensorboard writer home path (default: runs/)')
+parser.add_argument('--save-home',
+                    default='',
+                    help='checkpoint save path (default: \'\')')
 parser.add_argument('--writer',
                     default='tiny_imagenet_200_m2',
                     help='filefolder name of tensorboard (default: tiny_imagenet_200_m2)')
@@ -41,6 +47,7 @@ parser.add_argument('-lr', '--learning-rate', type=float, default=0.001, help='i
 parser.add_argument('-b', '--batch-size', type=int, default=128, help='mini-batch size (default 128)')
 parser.add_argument('-e', '--evaluate', action='store_true', help='evaluate model on validation set')
 parser.add_argument('-p', '--print-freq', default=70, type=int, metavar='N', help='print frequency (default: 70)')
+parser.add_argument('--seed', default=None, type=int, help='seed for initializing training.')
 parser.add_argument('--write-graph', action='store_true', help='write graph of structure on tensorboard')
 parser.add_argument('--dummy', action='store_true', help="use fake data to benchmark")
 
@@ -50,7 +57,10 @@ def main():
     args = parser.parse_args()
     global writer
     global best_acc1
-    writer = SummaryWriter('runs/' + args.writer)
+    writer = SummaryWriter(os.path.join(args.writer_home, args.writer))
+    if args.seed is not None:
+        torch.manual_seed(args.seed)
+        print(f'Using seed {args.seed}')
 
     # create model
     model = mm.MyResNet18M2(num_classes=args.num_classes)
@@ -108,6 +118,7 @@ def main():
         print('Writing graph')
         my_dataiter = iter(train_loader)
         imgs, _ = my_dataiter.next()
+        imgs = imgs.to(device)
         writer.add_graph(model, imgs)
         writer.flush()
         return
@@ -133,7 +144,7 @@ def main():
                 'best_acc1': best_acc1,
                 'optimizer': optimizer.state_dict(),
                 'scheduler': scheduler.state_dict()
-            }, is_best)
+            }, is_best, args)
 
     writer.flush()
 
@@ -243,10 +254,11 @@ def validate(val_loader, model, criterion, args, epoch, device):
     return top1.avg
 
 
-def save_checkpoint(state, is_best, filename='checkpoint_m2.pth.tar'):
-    torch.save(state, filename)
+def save_checkpoint(state, is_best, args, filename='checkpoint_m2.pth.tar'):
+    path = os.path.join(args.save_home, filename)
+    torch.save(state, path)
     if is_best:
-        shutil.copyfile(filename, 'model_best_m2.pth.tar')
+        shutil.copyfile(path, os.path.join(args.save_home, 'model_best_m2.pth.tar'))
 
 
 class Summary(Enum):
